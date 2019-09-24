@@ -2074,7 +2074,7 @@ bool abi_compat_return_by_pointer(gbAllocator a, ProcCallingConvention cc, Type 
 		}
 	} else {
 		if (is_type_integer_128bit(single_type)) {
-			return build_context.word_size < 8;
+          return false;//build_context.word_size < 8;
 		}
 	}
 

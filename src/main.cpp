@@ -1014,10 +1014,10 @@ int main(int arg_count, char **arg_ptr) {
 
 
 	init_build_context(selected_target_metrics ? selected_target_metrics->metrics : nullptr);
-	if (build_context.word_size == 4) {
-		print_usage_line(0, "%s 32-bit is not yet supported", args[0]);
-		return 1;
-	}
+	// if (build_context.word_size == 4) {
+	// 	print_usage_line(0, "%s 32-bit is not yet supported", args[0]);
+	// 	return 1;
+	// }
 
 	init_universal();
 	// TODO(bill): prevent compiling without a linker
@@ -1114,6 +1114,10 @@ int main(int arg_count, char **arg_ptr) {
 		} else if (selected_target_metrics->metrics == &target_essence_amd64) {
 			system_exec_command_line_app("linker", "x86_64-essence-gcc \"%.*s.o\" -o \"%.*s\" %.*s", 
 					LIT(output_base), LIT(output_base), LIT(build_context.link_flags));
+        } else if (selected_target_metrics->metrics == &target_linux_386) {
+          system_exec_command_line_app("linker", "gcc -m32 \"%.*s.o\" -o \"%.*s\" %.*s", 
+                                       LIT(output_base), LIT(output_base), LIT(build_context.link_flags));
+          
 #endif
 		} else {
 			gb_printf_err("Don't know how to cross compile to selected target.\n");

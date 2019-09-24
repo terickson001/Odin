@@ -1709,13 +1709,22 @@ void ir_print_instr(irFileBuffer *f, irModule *m, irValue *value) {
 	case irInstr_Conv: {
 		irInstrConv *c = &instr->Conv;
 		if (c->kind == irConv_byteswap) {
-			int sz = cast(int)(8*type_size_of(c->from));
-			ir_fprintf(f, "%%%d = call i%d @llvm.bswap.i%d(", value->index, sz, sz);
-			ir_print_type(f, m, c->from);
-			ir_write_byte(f, ' ');
-			ir_print_value(f, m, c->value, c->from);
-			ir_write_byte(f, ')');
-			ir_print_debug_location(f, m, value);
+          int sz = cast(int)(8*type_size_of(c->from));
+          char *bswap_proc = gb_bprintf("llvm.bswap.i%d", sz);
+          ir_fprintf(f, "%%%d = call i%d @%s(", value->index, sz, bswap_proc);
+          if (map_get(&m->members, hash_string(str_lit(bswap_proc))) == nullptr) {
+            ir_print_type(f, m, c->from);
+            ir_write_byte(f, ' ');
+            ir_print_value(f, m, c->value, c->from);
+            ir_write_byte(f, ')');
+            ir_print_debug_location(f, m, value);
+          } else {
+            ir_print_type(f, m, c->from);
+            ir_write_byte(f, ' ');
+            ir_print_value(f, m, c->value, c->from);
+            ir_write_byte(f, ')');
+            ir_print_debug_location(f, m, value);
+          }
 		} else {
 			ir_fprintf(f, "%%%d = ", value->index);
 			ir_write_string(f, ir_conv_strings[c->kind]);
@@ -2252,7 +2261,11 @@ void print_llvm_ir(irGen *ir) {
 		if (word_bits == 64 && build_context.metrics.arch == TargetArch_amd64) {
 			ir_fprintf(f, "target datalayout = \"e-m:w-i64:64-f80:128-n8:16:32:64-S128\"\n\n");
 		}
-	}
+	} else if (build_context.ODIN_OS == "linux") {
+      //ir_fprintf(f, "target triple = \"x86%s-pc-linux-elf\"\n\n", word_bits == 64 ? "_64" : "");
+      ir_fprintf(f, "target triple = \"i686-pc-linux-elf\"\n\n");
+    }
+      
 
 	ir_print_encoded_local(f, str_lit("..opaque"));
 	ir_write_str_lit(f, " = type {};\n");
